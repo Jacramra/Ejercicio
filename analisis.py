@@ -5,36 +5,66 @@ import matplotlib.pyplot as plt
 # Seaborn para visualizaciones más estilizadas
 import seaborn as sns
 import os
+import io
+import matplotlib.backends.backend_agg import FigureCanvasAgg
+from PIL import image
 
+#Función auxiliar paar convertir figura matplolib a image PIL
+def fig_to_pil(fig):
+    buf = io.BytesIO()
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    canvas.print_png(buf)
+    buf.seek(0)
+    return Image.open(buf)
 
 class DataAnalyzer:
     def __init__(self, data):
         self.df = data
+        self.categorical_analisis_cols = data.select_dtypes(include='object').columns
+        self.numeric_cools = data.select_dtypes(include=np.number).columns
+
     def summary(self):
-        print(self.df.info())
-        print(self.df.describe())
+        buffer = io.StringIO()
+        self.df.info(buf = buffer)
+        salida_info = buffer.getvalue()
+        salida_describe = self.df.describe().to_string()
+        salida = salida_info+ "n\n" + salida_describe
+        return salida
+
     def missing_values(self):
         return self.df.isnull()
+
     def imprimir(self):
         print("Hola")
 
     def correlation_matrix(self):
-        numeric_cols = self.df.select_dtypes(include=np.number).columns
         corr = self.df[numeric_cols].corr()
-        plt.figure()
-        sns.heatmap(corr, annot = True, cmap = 'coolwarm')
-        plt.title('Matriz de Correlación')
-        plt.show()
+        fig, ax = plt.subplots()
+        sns.heatmap(corr, annot = True, cmap = 'coolwarm', ax=ax)
+        ax.set_title('Matriz de Correlación')
+        return fig_to_pil(fig)
 
     def categorical_analisis(self):
-        categorical_cols = self.df.select_dtypes(include='object').columns
-        print(f"Las columnas categoricas son: {categorical_cols}")
+        print(f"Las columnas categoricas son: {set.categorical_analisis_cols}")
         column = input("Digite la columna a visualizar: ")
-
-        if column in categorical_cols:
-            plt.figure()
-            sns.countplot(data = self.df, x=column, order=self.df[column].value_counts().index)
-            plt.xticks(rotation=45)
-            plt.show()
-        else:
-            print("La columna no es categorica o está mal escrita.")  
+        if column in self.categorical_analisis_cols:
+            fig, ax = plt.subplots()
+            sns.countplot(data = self.df, x=column, order=self.df[column].value_counts().index, ax=ax)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+            ax.set_title(f'Analisis de: {column}')
+            return fig_to_pil(fig)
+        else:  
+            print("Columna no válida.")
+            return None
+    
+    def categorical_analisis_cols(self,column):
+        if column in self.categorical_analisis_cols:
+            fig, ax = plt.subplots()
+            sns.countplot(data = self.df, x=column, order=self.df[column].value_counts().index, ax=ax)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+            ax.set_title(f'Analisis de: {column}')
+            return fig_to_pil(fig)
+        else:  
+            print("Columna no válida.")
+            return None
