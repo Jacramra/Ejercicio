@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import io
-import matplotlib.backends.backend_agg import FigureCanvasAgg
-from PIL import image
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from PIL import Image
 
 #Función auxiliar paar convertir figura matplolib a image PIL
 def fig_to_pil(fig):
